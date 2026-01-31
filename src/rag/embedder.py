@@ -1,8 +1,18 @@
-from sentence_transformers import SentenceTransformer
+import os
+import requests
 
 class Embedder:
-    def __init__(self):
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+    def __init__(self, model="nomic-embed-text"):
+        self.model = model
+        self.host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
     def embed(self, texts):
-        return self.model.encode(texts)
+        vectors = []
+        for t in texts:
+            r = requests.post(
+                f"{self.host}/api/embeddings",
+                json={"model": self.model, "prompt": t}
+            )
+            r.raise_for_status()
+            vectors.append(r.json()["embedding"])
+        return vectors
